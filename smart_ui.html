@@ -1,0 +1,168 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>mvc_kata</title>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.15/jquery-ui.min.js"></script>
+<script type="text/javascript">
+<!--
+
+function extend(super_class, initializer, prototype) {
+  var sub_class = function() {
+    super_class.apply(this, arguments);
+    initializer.apply(this, arguments);
+  };
+  sub_class.prototype = $.extend({}, super_class.prototype, prototype);
+  return sub_class;
+}
+
+Living = extend(Object, function() {
+  this.hp = this.max_hp;
+}, {});
+
+Enemy = extend(Living, function() {
+}, {});
+
+Slime = extend(Enemy, function(){}, {
+  name: 'SLIME',
+  max_hp: 10,
+  attack_power: 4,
+  exp: 1
+});
+
+Dragon = extend(Enemy, function(){}, {
+  name: 'DRAGON',
+  max_hp: 20,
+  attack_power: 8,
+  exp: 3000
+});
+
+Player = extend(Living, function(){}, {
+  name: 'PLAYER',
+  max_hp: 10,
+  attack_power: 3
+});
+
+Message = extend(Living, function(template){
+  this.template = template;
+}, {
+  text: function() {
+    var s = this.template;
+    for(var i = 0; i < arguments.length; i++) {
+      s = s.replace('{'+i+'}', arguments[i]);
+    }
+    return s;
+  }
+});
+
+MESSAGES = {
+  WIN: new Message(
+    "{0}をたおした\n\n" +
+    "===========================\n" +
+    "かかったターン数{1}\n" +
+    "経験値{2}かくとく"),
+  LOOSE: new Message(
+    "{0}はたおれました\n\n" +
+    "===========================\n" +
+    "ゲームオーバー"),
+  ATTACK: new Message(
+    "{0}のこうげき\n" +
+    "{1}に{2}のダメージ"),
+  CURE: new Message(
+    "{0}はホイミをとなえた\n" +
+    "HPが{1}回復した"),
+  COMMAND: new Message(
+    "{0}のHP: {1}\n" +
+    " 1 たたかう\n" +
+    " 2 ホイミ\n\n" +
+    "{2}？"),
+  ENCOUNT: new Message(
+    "{0}があらわれた")
+};
+
+Battle = extend(Object, function() {
+  this.enemy_classes = [Slime, Dragon];
+  this.player = new Player();
+  this.turn_count = 0;
+}, {
+  finish_battle: function() {
+    alert(MESSAGES['WIN'].text(this.enemy.name, this.turn_count, this.enemy.exp));
+  },
+  check_enemy_hp: function() {
+    if (this.enemy.hp <= 0) {
+      this.enemy.hp = 0;
+      this.finish_battle();
+    } else {
+      this.enemy_attack();
+    }
+  },
+  game_over: function() {
+    alert(MESSAGES['LOOSE'].text(this.player.name));
+  },
+  check_player_hp: function() {
+    if (this.player.hp <= 0) {
+      this.player.hp = 0;
+      this.game_over();
+    } else {
+      this.query_command();
+    }
+  },
+  enemy_attack: function() {
+    var damage_point = Math.floor(Math.random() * this.enemy.attack_power) + 1;
+    this.player.hp -= damage_point
+    alert(MESSAGES['ATTACK'].text(this.enemy.name, this.player.name, damage_point));
+    this.check_player_hp();
+  },
+  player_attack: function() {
+    var damage_point = Math.floor(Math.random() * this.player.attack_power) + 1;
+    this.enemy.hp -= damage_point;
+    alert(MESSAGES['ATTACK'].text(this.player.name, this.enemy.name, damage_point));
+    this.check_enemy_hp();
+  },
+  player_hoimi: function() {
+    var cure_point = Math.floor(Math.random() * 8) + 1;
+    this.player.hp = Math.min(this.player.hp + cure_point, this.player.max_hp);
+    alert(MESSAGES['CURE'].text(this.player.name, cure_point));
+    this.enemy_attack();
+  },
+  query_command: function() {
+    this.turn_count += 1;
+    var command;
+    for (;;) {
+      if (confirm(MESSAGES['COMMAND'].text(this.player.name, this.player.hp, 'たたかう'))) {
+        command = 1;
+        break;
+      }
+      if (confirm(MESSAGES['COMMAND'].text(this.player.name, this.player.hp, 'ホイミ'))) {
+        command = 2;
+        break;
+      }
+    }
+    switch (command) {
+    case 1:
+      this.player_attack();
+      break;
+    case 2:
+      this.player_hoimi();
+      break;
+    }
+  },
+  encounter: function() {
+    this.enemy = new this.enemy_classes[Math.floor(Math.random() * this.enemy_classes.length)];
+    alert(MESSAGES['ENCOUNT'].text(this.enemy.name));
+    this.query_command();
+  },
+  start: function() {
+    this.encounter();
+  }
+});
+
+//-->
+</script>
+</head>
+<body>
+
+<button onclick="new Battle().start();">start</button>
+
+</body>
+</html>
