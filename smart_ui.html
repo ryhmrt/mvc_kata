@@ -43,7 +43,7 @@ Player = extend(Living, function(){}, {
   attack_power: 3
 });
 
-Message = extend(Living, function(template){
+Message = extend(Object, function(template){
   this.template = template;
 }, {
   text: function() {
